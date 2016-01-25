@@ -389,7 +389,7 @@ static void rdp_load_tlut(uint32_t w1, uint32_t w2)
 
   rdpChanged |= RDP_BITS_TLUT;
 
-  int count = (tile.sh - tile.sl + 4 >>2) * (tile.th - tile.tl + 4 >>2);
+  int count = ((tile.sh - tile.sl + 4) >>2) * ((tile.th - tile.tl + 4) >>2);
 
   switch (rdpTiSize)
   {
@@ -437,11 +437,11 @@ static void rdp_load_block(uint32_t w1, uint32_t w2)
   rdpChanged |= RDP_BITS_TMEM;
 
 	sl	= ((w1 >> 12) & 0xfff);
-	tl	= ((w1 >>  0) & 0xfff) << 11;
+	tl	= ((w1 >>  0) & 0xfff);
 	sh	= ((w2 >> 12) & 0xfff);
 	dxt	= ((w2 >>  0) & 0xfff);
 
-	width = (sh - sl) + 1 << rdpTiSize >> 1;
+	width = (sh - sl + 1) << rdpTiSize >> 1;
 
 	src = (uint32_t*)&rdram[0];
 	tc = (uint32_t*)rdpTmem;
@@ -469,9 +469,9 @@ static void rdp_load_block(uint32_t w1, uint32_t w2)
 		{
 			int t = j >> 11;
 
-      tc[((tb+i) + 0  ^ ((t & 1) ? swap : 0))&0x3ff] =
+      tc[(((tb+i) + 0)  ^ ((t & 1) ? swap : 0))&0x3ff] =
         src[rdpTiAddress / 4 + ((tl * rdpTiWidth) / 4) + sl + i + 0];
-      tc[((tb+i) + 1 ^ ((t & 1) ? swap : 0))&0x3ff] =
+      tc[(((tb+i) + 1) ^ ((t & 1) ? swap : 0))&0x3ff] =
         src[rdpTiAddress / 4 + ((tl * rdpTiWidth) / 4) + sl + i + 1];
         
 			j += dxt;
@@ -604,7 +604,7 @@ static void rdp_load_tile(uint32_t w1, uint32_t w2)
 static void rdp_set_tile(uint32_t w1, uint32_t w2)
 {
 	int tilenum = (w2 >> 24) & 0x7;
-  int i;
+  //int i;
 
   rdpChanged |= RDP_BITS_TILE_SETTINGS;
   rdpTileSet |= 1<<tilenum;
@@ -685,13 +685,13 @@ static void rdp_set_texture_image(uint32_t w1, uint32_t w2)
   rdpTiFormat	= (w1 >> 21) & 0x7;
 	rdpTiSize		= (w1 >> 19) & 0x3;
 	rdpTiWidth	= (w1 & 0x3ff) + 1;
-	rdpTiAddress	= w2 & 0x01ffffff;
+	rdpTiAddress	= w2 & 0x0ffffff;
 }
 
 static void rdp_set_mask_image(uint32_t w1, uint32_t w2)
 {
   rdpChanged |= RDP_BITS_ZB_SETTINGS;
-	rdpZbAddress	= w2 & 0x01ffffff;
+	rdpZbAddress	= w2 & 0x0ffffff;
 }
 
 static void rdp_set_color_image(uint32_t w1, uint32_t w2)
@@ -700,7 +700,7 @@ static void rdp_set_color_image(uint32_t w1, uint32_t w2)
 	rdpFbFormat 	= (w1 >> 21) & 0x7;
 	rdpFbSize		= (w1 >> 19) & 0x3;
 	rdpFbWidth	= (w1 & 0x3ff) + 1;
-	rdpFbAddress	= w2 & 0x01ffffff;
+	rdpFbAddress	= w2 & 0x0ffffff;
 }
 
 /*****************************************************************************/
@@ -731,8 +731,8 @@ static void (* rdp_command_table[64])(uint32_t w1, uint32_t w2) =
 
 void rdp_process_list(void)
 {
-	int i;
-	uint32_t cmd, length, cmd_length;
+	//int i;
+	uint32_t cmd;//, length, cmd_length;
 
   rglUpdateStatus();
   if (!rglSettings.threaded)
@@ -798,7 +798,7 @@ void rdp_process_list(void)
 
 int rdp_store_list(void)
 {
-	int i;
+	uint32_t i;
 	uint32_t data, cmd, length;
   int sync = 0;
 

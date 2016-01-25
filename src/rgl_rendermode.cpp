@@ -26,7 +26,7 @@
 
 void rglRenderMode(rglRenderChunk_t & chunk)
 {
-  int i;
+  //int i;
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   if (RDP_GETOM_CYCLE_TYPE(chunk.rdpState.otherModes) < 2) {
     glDepthMask(RDP_GETOM_Z_UPDATE_EN(chunk.rdpState.otherModes)? GL_TRUE:GL_FALSE);
@@ -178,7 +178,7 @@ void rglSetCombiner(rglRenderChunk_t & chunk, int format)
     "c",									t1,									t2,						"p/*PRIM*/", 
     "gl_Color/*SHADE*/",	"e",									"0.0/*SCALE*/",	"c.a/*COMBINED_A*/",
     "t1.a/*TEXEL0_A*/",		"t2.a/*TEXEL1_A*/",		"p.a/*PRIM_A*/",	"gl_Color.a/*SHADEA*/",
-    "e.a/*ENV_ALPHA*/",		"0.5/*LOD_FRACTION*/","0.5/*PRIM_LOD_FRAC*/",	"k5/*K5*/",
+    "e.a/*ENV_ALPHA*/",		"0/*LOD_FRACTION*/","0.5/*PRIM_LOD_FRAC*/",	"k5/*K5*/",
     "0.0",				"0.0",				"0.0",				"0.0",
     "0.0",				"0.0",				"0.0",				"0.0",
     "0.0",				"0.0",				"0.0",				"0.0",
@@ -201,7 +201,7 @@ void rglSetCombiner(rglRenderChunk_t & chunk, int format)
   };
 
   static const char *mA[] = {
-    "0.5/*LOD_FRACTION*/",		t1a,			t2a,			"p.a/*PRIM*/", 
+    "0/*LOD_FRACTION*/",		t1a,			t2a,			"p.a/*PRIM*/", 
     "gl_Color.a/*SHADE*/",			"e.a",		prim_lod_frac,	"0.0",
   };
 
@@ -219,12 +219,11 @@ void rglSetCombiner(rglRenderChunk_t & chunk, int format)
 
   rdpState_t & state = chunk.rdpState;
   static rglCombiner_t * c;
-  int cycle = RDP_GETOM_CYCLE_TYPE(state.otherModes);
-  int i, fmt, size;
+  uint32_t cycle = RDP_GETOM_CYCLE_TYPE(state.otherModes);
+  int i;// , fmt, size;
   char * p;
-  char * alphaTest;
-  char * alphaTest2;
-  static char * write;
+  const char * alphaTest;
+  const char * alphaTest2;
   static char src[4*4096];
 
   float env[4];
@@ -306,18 +305,13 @@ void rglSetCombiner(rglRenderChunk_t & chunk, int format)
   c->srcBlend = GL_ONE;
   c->dstBlend = GL_ZERO;
 #endif
-
-  switch (format & RGL_COMB_FMT) {
-    case RGL_COMB_FMT_RGBA:
-      write = "gl_FragColor = c;";
-      break;
-    case RGL_COMB_FMT_I:
-      write = "gl_FragColor = vec4(c[0]);";
-      break;
-    case RGL_COMB_FMT_DEPTH:
-      write = "gl_FragDepth = c[0];";
-      break;
-  }
+  const char * write;
+  if ((format & RGL_COMB_FMT) == RGL_COMB_FMT_DEPTH)
+    write = "gl_FragDepth = c[0];";
+  else if ((format & RGL_COMB_FMT) == RGL_COMB_FMT_I)
+    write = "gl_FragColor = vec4(c[0]);";
+  else //RGL_COMB_FMT_RGBA
+    write = "gl_FragColor = c;";
 
   if (cycle == RDP_CYCLE_TYPE_FILL) {
     sprintf(
@@ -453,7 +447,7 @@ void rglSetCombiner(rglRenderChunk_t & chunk, int format)
       break;
   }
 
-  char * comb, * comb2;
+  const char * comb, * comb2;
   comb2 = 0;
 //   switch (RDP_GETOM_CVG_DEST(state.otherModes))
 //   {
@@ -525,11 +519,11 @@ void rglSetCombiner(rglRenderChunk_t & chunk, int format)
 //   if (!RDP_GETOM_CVG_TIMES_ALPHA(state.otherModes))
 //     p += sprintf(p, "c.a = t1.a; \n");
 
-  p += sprintf(p, alphaTest);
+  p += sprintf(p, "%s", alphaTest);
 
 
-  char * blender;
-  char * noblender;
+  const char * blender;
+  const char * noblender;
   blender = "c = vec4(float(%s)*vec3(%s) + float(%s)*vec3(%s), 1.0); \n";
   noblender = "c.a = 1.0;\n";
 
@@ -581,7 +575,7 @@ void rglSetCombiner(rglRenderChunk_t & chunk, int format)
     if (m1a == 1 || m2a == 1) {
       if (/*(m1a != 1 || m1b == 3) &&*/ (m2a == 1 || m2b == 3)) {
         int src = GL_ZERO, dst = GL_ONE;
-        char * alpha = "c.a";
+        const char * alpha = "c.a";
         switch (m1b) {
           case 0: // c.a
             src = GL_SRC_ALPHA;

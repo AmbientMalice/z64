@@ -239,6 +239,7 @@ EXPORT void CALL UpdateScreen (void)
   } else
 #endif
   {
+    rglUpdateStatus();
     rglUpdate();
   }
 }
