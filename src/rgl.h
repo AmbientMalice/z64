@@ -44,6 +44,7 @@ struct rglSettings_t {
   int resX, resY;
   int fsResX, fsResY;
   int fbInfo;
+  int forceSwap;
   int threaded;
   int async;
   int noNpotFbos;
@@ -228,7 +229,7 @@ void rglClose();
 int rglOpenScreen();
 void rglCloseScreen();
 int rglReadSettings();
-void rglUpdateVI();
+void rglUpdate();
 void rglFullSync();
 void rglTextureRectangle(rdpTexRect_t * rect, int flip);
 void rglFillRectangle(rdpRect_t * rect);

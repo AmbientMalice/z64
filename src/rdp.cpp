@@ -27,7 +27,7 @@
 rdpState_t rdpState;
 uint32_t   rdpChanged;
 //rdpColor_t rdpTlut[1024];
-uint8_t    rdpTmem[0x1000];
+uint8_t    rdpTmem[4*0x1000];
 int        rdpFbFormat;
 int        rdpFbSize;
 int        rdpFbWidth;
@@ -318,6 +318,7 @@ static void rdp_sync_full(uint32_t w1, uint32_t w2)
 {
   //printf("full sync\n");
   rglFullSync();
+  rglUpdate();
 
   if (rglSettings.async)
     rdpSignalFullSync();
@@ -739,6 +740,10 @@ void rdp_process_list(void)
   
   if (rglStatus == RGL_STATUS_CLOSED)
     return;
+
+  // this causes problem with depth writeback in zelda mm
+  // but is necessary for in fisherman
+  rglUpdate();
 
 	while (rdp_cmd_cur != rdp_cmd_ptr)
 	{
